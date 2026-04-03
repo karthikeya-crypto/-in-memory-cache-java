@@ -7,6 +7,7 @@ public class EvictionManager {
     public EvictionManager(DoublyLinkedList dll,Map<Long,Node> cacheMap){
         this.dll = dll;
         this.cacheMap = cacheMap;
+
     }
     public void evictLRU(){
         Node node = dll.removeTail(); // when capacity is full cache asks dll to remove least recently used

@@ -13,7 +13,7 @@ public class DoublyLinkedList {
         head.prev = node;
         head = node;
     }
-    public void remove(Node node){
+    public void  remove(Node node){
         if(node==head && node == tail){
             node.prev = node.next =null;
             head= tail=null;

@@ -6,12 +6,20 @@ public class Main {
 
         Cache cache = new Cache(2);
 
-        cache.set(1, 100);
-        cache.set(2, 200);
+        cache.set(1, 100,1);
+        cache.set(2, 200,10);
+       // cache.set(3, 300);
 
         System.out.println("Get 1: " + cache.get(1));
 
+
+        try {
+            Thread.sleep(2000); // Wait for 2 seconds
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
         cache.set(3, 300);
+
 
         System.out.println("Get 2: " + cache.get(2));
         System.out.println("Get 1: " + cache.get(1));

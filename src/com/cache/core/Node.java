@@ -16,6 +16,9 @@ public class Node {
         this.value= value;
         this.expiryTime = expirytime;
     }
+    long getExpiryTime(){
+        return expiryTime;
+    }
     public long getValue(){
         return value;
     }
