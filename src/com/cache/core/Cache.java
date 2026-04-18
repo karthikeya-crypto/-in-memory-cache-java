@@ -1,11 +1,15 @@
 package com.cache.core;
 import java.util.*;
+import java.util.concurrent.*;
+
 public class Cache {
 
      int capacity;
      Map<Long,Node> cacheMap;
       DoublyLinkedList dll;
       EvictionManager evictionManager;
+    PriorityQueue<Node> expiryQueue;
+
 
   public Cache(int capacity) {
       this.capacity = capacity;
@@ -13,22 +17,29 @@ public class Cache {
       this.dll = new DoublyLinkedList();
 
       this.evictionManager = new EvictionManager(dll, cacheMap);
+
+      this.expiryQueue = new PriorityQueue<>(
+              (Node a, Node b) -> Long.compare(a.getExpiryTime(), b.getExpiryTime())
+      );
+
+      ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+
+      scheduler.scheduleAtFixedRate(() -> {
+          cleanExpiredUsingPQ();
+      }, 2, 2, TimeUnit.SECONDS);
   }
   public long get(long key){
 
       if(cacheMap.containsKey(key)){
-
-
           Node node= cacheMap.get(key);
-          if(node.getExpiryTime()!=-1&&System.currentTimeMillis()>node.getExpiryTime()){
+          if(node.getExpiryTime()!=-1 &&
+                  System.currentTimeMillis()>node.getExpiryTime()){
               dll.remove(node);
               cacheMap.remove(key);
               return -1;
           }
-
           dll.moveToHead(node);
           return node.getValue();
-
       }
       else
           return -1;
@@ -69,14 +80,18 @@ public class Cache {
 
         } else {
             if (capacity == cacheMap.size()) {
-                evictionManager.evictLRU();
-                addNode(key, value,ttl);
-            } else {
+
+                cleanExpired();
+
+                if (capacity == cacheMap.size()) {
+                    evictionManager.evictLRU();
+                }
+            }
 
                 addNode(key ,value,ttl);
 
 
-            }
+
         }
     }
 
@@ -92,19 +107,41 @@ public class Cache {
         Node node=new Node(key, value,exptime);
         dll.addToHead(node);
         cacheMap.put(key,node);
+        if (exptime != -1) {
+            expiryQueue.offer(node);
+        }
 
     }
     void cleanExpired(){
       int checks=2;
-      Node node=dll.head;
+      Node node=dll.getTail();
       while(node!=null&&checks-->0){
-          Node temp=node.next;
+          Node temp=node.prev;
           if(node.getExpiryTime()!=-1&&System.currentTimeMillis()>node.getExpiryTime()){
               dll.remove(node);
-              cacheMap.remove(node.key);
+              cacheMap.remove(node.getKey());
           }
           node=temp;
       }
+    }
+    void cleanExpiredUsingPQ() {
+        long now = System.currentTimeMillis();
+
+        while (!expiryQueue.isEmpty()) {
+            Node node = expiryQueue.peek();
+
+            if (node.getExpiryTime() > now) {
+                break; // nothing more expired
+            }
+
+            expiryQueue.poll(); // remove from PQ
+
+
+            if (cacheMap.get(node.getKey()) == node) {
+                dll.remove(node);
+                cacheMap.remove(node.getKey());
+            }
+        }
     }
 
 

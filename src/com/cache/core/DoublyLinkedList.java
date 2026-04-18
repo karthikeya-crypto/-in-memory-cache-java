@@ -62,6 +62,9 @@ public class DoublyLinkedList {
         addToHead(node);
     }
 
+    public Node getTail() {
+        return head;
+    }
 }
 
 

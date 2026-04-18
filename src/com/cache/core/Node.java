@@ -22,6 +22,9 @@ public class Node {
     public long getValue(){
         return value;
     }
+    public long getKey(){
+        return key;
+    }
     public void setValue(long value){
         this.value= value;
     }
